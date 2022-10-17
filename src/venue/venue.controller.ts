@@ -16,42 +16,57 @@ export class VenueController {
     constructor(private readonly productsService: VenueService) { }
 
     @Post()
-    addVenue(
+    async addVenue(
         @Body('name') name: string,
         @Body('location') location: string,
     ) {
-        const generatedId = this.productsService.addVenue(
-            name,
-            location,
+        try {
+            const venue = await this.productsService.addVenue(
+                name,
+                location,
 
-        );
-        return { id: generatedId };
+            );
+            return venue;
+        } catch (err) {
+            return err
+        }
     }
 
     @Get()
-    async getAllVenues() {
-        const employee = await this.productsService.getVenue();
-        return employee as any
+    async getAllVenues(): Promise<Venue[]> {
+        try {
+            const venues = await this.productsService.getVenue();
+            return venues as Venue[]
+        } catch (err) { return err; }
     }
 
     @Get(':id')
-    getVenue(@Param('id') venueId: string) {
-        return this.productsService.getSingleVenue(venueId);
+    async getVenue(@Param('id') venueId: string) {
+        try {
+            const venue = await this.productsService.getSingleVenue(venueId);
+            return venue
+        } catch (err) { return err; }
     }
 
     @Patch(':id')
-    updateVenue(
+    async updateVenue(
         @Param('id') id: string,
         @Body('name') name: string,
         @Body('location') location: string,
     ) {
-        this.productsService.updateVenue(id, name, location,);
-        return null;
+        try {
+            const updatedVenue = await this.productsService.updateVenue(id, name, location,);
+            return updatedVenue;
+        } catch (err) { return err }
     }
 
     @Delete(':id')
-    removeVenue(@Param('id') id: string) {
-        this.productsService.deleteVenue(id);
-        return null;
+    async removeVenue(@Param('id') id: string) {
+        try {
+            const deletedVenue = await this.productsService.deleteVenue(id);
+            return deletedVenue;
+        } catch (err) {
+            return err
+        }
     }
 }

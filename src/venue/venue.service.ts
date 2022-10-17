@@ -8,60 +8,60 @@ import { Model } from 'mongoose';
 
 @Injectable()
 export class VenueService {
-    private employee: Venue[] = [];
 
     constructor(@InjectModel('Venue') private readonly venueModel: Model<Venue>) { }
 
     async addVenue(name: string, location: string) {
-
-        const newVenue = new this.venueModel({
-            name: name,
-            location: location,
-        })
-        const result = await newVenue.save();
-        console.log(result);
-        return result;
+        try {
+            const newVenue = new this.venueModel({
+                name: name,
+                location: location,
+            })
+            const result = await newVenue.save();
+            return result;
+        } catch (err) { return err }
     }
 
     async getVenue() {
-        console.log(`getVenue`);
-        const employee = await this.venueModel.find().exec();
-        return employee.map(prod => ({
-            id: prod.id,
-            name: prod.name,
-            location: prod.location,
-        }));
+        try {
+
+            console.log(`getVenue`);
+            const employee = await this.venueModel.find().exec();
+            return employee.map(prod => ({
+                id: prod.id,
+                name: prod.name,
+                location: prod.location,
+            }));
+        } catch (e) { return e; }
     }
 
-    getSingleVenue(venueId: string) {
-        const product = this.findProduct(venueId)[0];
-        return { ...product };
+    async getSingleVenue(venueId: string) {
+        try {
+            const venue = await this.venueModel.findById(venueId);
+            if (!venue)
+                throw new NotFoundException('Venue not found');
+            return venue
+        } catch (e) { return e }
     }
 
-    updateVenue(productId: string, name: string, location: string) {
-        const [product, index] = this.findProduct(productId);
-        const updatedProduct = { ...product };
-        if (name) {
-            updatedProduct.name = name;
+    async updateVenue(venueId: string, name: string, location: string) {
+        try {
+            const updatedVenue = await this.venueModel.findByIdAndUpdate(venueId, { name, location }, { new: true })
+            if (!updatedVenue)
+                throw new NotFoundException('Not found')
+            return updatedVenue
+        } catch (e) {
+            return e
         }
-
-        if (location) {
-            updatedProduct.location = location;
-        }
-        //  this.products[index] = updatedProduct;
     }
 
-    deleteVenue(prodId: string) {
-        const index = this.findProduct(prodId)[1];
-        this.employee.splice(index, 1);
-    }
+    async deleteVenue(venueId: string) {
+        try {
+            const deleteVenue = await this.venueModel.findByIdAndDelete(venueId)
+            if (!deleteVenue)
+                throw new NotFoundException('Venue not found')
+            return deleteVenue
+        } catch (e) { return e }
 
-    private findProduct(id: string): [Venue, number] {
-        const productIndex = this.employee.findIndex(prod => prod.id === id);
-        const product = this.employee[productIndex];
-        if (!product) {
-            throw new NotFoundException('Could not find product.');
-        }
-        return [product, productIndex];
     }
 }

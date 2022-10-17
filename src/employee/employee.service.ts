@@ -13,55 +13,60 @@ export class EmployeeService {
   constructor(@InjectModel('Employee') private readonly employeeModel: Model<Employee>) { }
 
   async addEmploye(name: string, age: number) {
+    try {
+      const newEmploye = new this.employeeModel({
+        name: name,
+        age: age,
+      })
+      const result = await newEmploye.save();
+      return result;
+    } catch (err) { return err }
 
-    const newEmploye = new this.employeeModel({
-      name: name,
-      age: age,
-    })
-    const result = await newEmploye.save();
-    console.log(result);
-    return result;
   }
 
-  async getEmployee() {
-    console.log(`getEmployee`);
-    const employee = await this.employeeModel.find().exec();
-    return employee.map(prod => ({
-      id: prod.id,
-      name: prod.name,
-      age: prod.age,
-    }));
-  }
-
-  getSingleEmploye(productId: string) {
-    const product = this.findProduct(productId)[0];
-    return { ...product };
-  }
-
-  updateEmploye(productId: string, name: string, age: number) {
-    const [product, index] = this.findProduct(productId);
-    const updatedProduct = { ...product };
-    if (name) {
-      updatedProduct.name = name;
+  async getEmployee(): Promise<Employee[]> {
+    try {
+      const employee = await this.employeeModel.find().exec();
+      return employee
     }
-
-    if (age) {
-      updatedProduct.age = age;
+    catch (err) {
+      console.log(err);
+      return err
     }
-    //  this.products[index] = updatedProduct;
   }
 
-  deleteEmploye(prodId: string) {
-    const index = this.findProduct(prodId)[1];
-    this.employee.splice(index, 1);
+
+
+  async updateEmploye(employeId: string, name: string, age: number) {
+    try {
+      const updatedEmploye = await this.employeeModel.findByIdAndUpdate(employeId, { name, age }, { new: true }).exec();
+      return updatedEmploye
+    } catch (err) {
+      return err
+    }
   }
 
-  private findProduct(id: string): [Employee, number] {
-    const productIndex = this.employee.findIndex(prod => prod.id === id);
-    const product = this.employee[productIndex];
-    if (!product) {
-      throw new NotFoundException('Could not find product.');
+  async deleteEmploye(employeId: string) {
+    try {
+      const deletedEmployee = await this.employeeModel.findByIdAndDelete(employeId);
+      if (!deletedEmployee)
+        throw new NotFoundException('Employe not found')
+      return deletedEmployee
+    } catch (err) {
+      console.error(err);
+      return err
     }
-    return [product, productIndex];
+  }
+
+  async getSingleEmploye(id: string): Promise<Employee> {
+    try {
+      const employe = await this.employeeModel.findById(id);
+      if (!employe) {
+        throw new NotFoundException('Could not find employee.');
+      }
+      return employe;
+    } catch (e) {
+      return e
+    }
   }
 }

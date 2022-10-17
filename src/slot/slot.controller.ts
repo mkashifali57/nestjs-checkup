@@ -6,52 +6,80 @@ import {
   Param,
   Patch,
   Delete,
+  NotFoundException,
 } from '@nestjs/common';
-import { Slot } from './slot.model';
+
+import { AllowedStatus, Slot } from './slot.model';
 
 import { SlotService } from './slot.service';
 
-@Controller('employee')
+@Controller('slots')
 export class SlotController {
-  constructor(private readonly productsService: SlotService) { }
+  constructor(private readonly slotService: SlotService) { }
 
   @Post()
-  addEmploye(
-    @Body('name') name: string,
-    @Body('age') age: number,
-  ) {
-    const generatedId = this.productsService.addEmploye(
-      name,
-      age,
+  async createSlot(
+    @Body('venueId') venueId: string,
+    @Body('employeeId') employeeId: string,
+    @Body('scheduledAt') scheduledAt: Date,
+    @Body('status') status: AllowedStatus,
+    @Body('note') note: string,
 
-    );
-    return { id: generatedId };
+  ) {
+    try {
+      const generatedId = await this.slotService.createSlot(
+        venueId, employeeId, scheduledAt, status, note
+      );
+      return { id: generatedId };
+    } catch (e) {
+      return e
+    }
   }
 
   @Get()
-  async getAllEmployee() {
-    const employee = await this.productsService.getEmployee();
-    return employee as any
+  async getAllSlots(): Promise<Slot[]> {
+    try {
+      const slots = await this.slotService.getSlots();
+      return slots
+    } catch (e) {
+      console.log(e)
+      return e
+    }
   }
 
   @Get(':id')
-  getEmploye(@Param('id') empId: string) {
-    return this.productsService.getSingleEmploye(empId);
+  async getSlotById(@Param('id') empId: string) {
+    try {
+      return await this.slotService.getSingleSlot(empId);
+    } catch (e) { console.log(e); return e }
   }
 
   @Patch(':id')
-  updateEmploye(
-    @Param('id') empId: string,
-    @Body('name') name: string,
-    @Body('age') age: number,
+  async updateEmploye(
+    @Param('id') slotId: string,
+    @Body('venueId') venueId: string,
+    @Body('employeeId') employeeId: string,
+    @Body('scheduledAt') scheduledAt: Date,
+    @Body('status') status: AllowedStatus,
+    @Body('note') note: string,
   ) {
-    this.productsService.updateEmploye(empId, name, age,);
-    return null;
+    try {
+      console.log(status)
+      const updatedSlot = this.slotService.updateSlot(slotId, venueId, employeeId, scheduledAt, status, note);
+      if (!updatedSlot)
+        throw new NotFoundException('Could not find slot.');
+      return updatedSlot;
+    } catch (err) {
+      return err;
+    }
   }
 
   @Delete(':id')
-  removeEmploye(@Param('id') empId: string) {
-    this.productsService.deleteEmploye(empId);
+  async removeEmploye(@Param('id') empId: string) {
+    try {
+      await this.slotService.deleteSlot(empId);
+    } catch (err) { return err }
+    this.slotService.deleteSlot(empId);
     return null;
   }
 }

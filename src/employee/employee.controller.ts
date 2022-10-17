@@ -16,22 +16,32 @@ export class EmployeeController {
   constructor(private readonly productsService: EmployeeService) { }
 
   @Post()
-  addEmploye(
+  async addEmploye(
     @Body('name') name: string,
     @Body('age') age: number,
   ) {
-    const generatedId = this.productsService.addEmploye(
-      name,
-      age,
+    try {
 
-    );
-    return { id: generatedId };
+      const employee = await this.productsService.addEmploye(
+        name,
+        age,
+      );
+      return { employee };
+    } catch (err) {
+      console.log(err);
+      return err
+    }
   }
 
   @Get()
   async getAllEmployee() {
-    const employee = await this.productsService.getEmployee();
-    return employee as any
+    try {
+      const employee = await this.productsService.getEmployee();
+      return employee as Employee[]
+    } catch (err) {
+      console.log(err);
+      return err
+    }
   }
 
   @Get(':id')
@@ -40,18 +50,25 @@ export class EmployeeController {
   }
 
   @Patch(':id')
-  updateEmploye(
+  async updateEmploye(
     @Param('id') empId: string,
     @Body('name') name: string,
     @Body('age') age: number,
   ) {
-    this.productsService.updateEmploye(empId, name, age,);
-    return null;
+    try {
+
+      const updatedEmploye = await this.productsService.updateEmploye(empId, name, age);
+      return updatedEmploye;
+    } catch (err) {
+      return err
+    }
   }
 
   @Delete(':id')
-  removeEmploye(@Param('id') empId: string) {
-    this.productsService.deleteEmploye(empId);
-    return null;
+  async removeEmploye(@Param('id') empId: string) {
+    try {
+      const deletedEmployee = await this.productsService.deleteEmploye(empId);
+      return deletedEmployee
+    } catch (err) { return err }
   }
 }
